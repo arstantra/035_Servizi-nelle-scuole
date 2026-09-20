@@ -7,8 +7,18 @@
 *
 
 !.gitignore
+
+# l'app cifrata, l'unico file che contiene i dati
 !index.html
 
-# Se in futuro vuoi versionare anche una descrizione del progetto,
+# i file che la rendono installabile come app: non cambiano mai
+!manifest.webmanifest
+!sw.js
+!icon-192.png
+!icon-512.png
+!icon-maskable-512.png
+!apple-touch-icon.png
+
+# Se vuoi versionare anche una descrizione del progetto,
 # togli il cancelletto dalla riga seguente:
 # !README.md
