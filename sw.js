@@ -2,7 +2,7 @@
    Strategia: si serve subito dalla cache (quindi funziona senza rete) e
    nel frattempo si riscarica in silenzio, così al prossimo avvio hai
    la versione aggiornata senza dover fare nulla. */
-const CACHE = "registro-servizi-v1";
+const CACHE = "registro-servizi-v2";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
                "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
 
