@@ -1,0 +1,14 @@
+# Registro dei servizi — pubblicazione su GitHub Pages
+#
+# Regola a lista bianca: si ignora tutto, e si riammette solo l'indispensabile.
+# Qualsiasi file nuovo in questa cartella resta fuori dal repository
+# finché non lo aggiungi qui sotto di proposito.
+
+*
+
+!.gitignore
+!index.html
+
+# Se in futuro vuoi versionare anche una descrizione del progetto,
+# togli il cancelletto dalla riga seguente:
+# !README.md
