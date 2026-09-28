@@ -359,6 +359,15 @@ footer.doc{margin-top:44px; padding-top:16px; border-top:1px solid var(--line);
 .acts{margin-left:auto; display:flex; gap:12px}
 .inc-add{color:var(--x)}
 .inc-vuoto{margin:6px 0 0}
+.xline{display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; padding:0 2px 9px; margin-top:-5px; font-size:12.5px}
+.xline .inc-add{font-size:12px; padding:0}
+.xpm{color:var(--ink-2)}
+.xedit{margin:0 0 12px; padding:10px 12px 12px; border:1px dashed var(--x); border-radius:6px; background:var(--x-soft)}
+.xedit[hidden]{display:none}
+.xedit .grid{margin-top:4px}
+.xedit input{background:var(--surface)}
+.xnote{margin:0; font-size:12.5px; color:var(--ink-2)}
+td .inc-add{font-size:11.5px; padding:0 2px}
 .xbox{margin-top:14px; padding:10px 12px 12px; border:1px dashed var(--x); border-radius:6px; background:var(--x-soft)}
 .xbox .grid{margin-top:6px}
 .xbox input{background:var(--surface)}
@@ -1127,7 +1136,10 @@ function cdcDettaglio(c, g){
           + (s.al ? fdateShort(s.al) : "oggi")+"</td>"
         + "<td class=\"sub-school\" data-label=\"Istituto\">"+esc(sc.ist)
           + "<small>"+esc(sc.nome)+(sc.comune ? " \u00b7 " + esc(sc.comune) : "")+"</small>"
-          + (s.classi ? "<small class=\"xclassi extra\">classi "+esc(s.classi)+"</small>" : "")+"</td>"
+          + "<small class=\"extra" + (s.classi ? "" : " noprint") + "\">"
+          + (s.classi ? "<span class=\"xclassi\">classi "+esc(s.classi)+"</span> " : "")
+          + "<button class=\"linkbtn inc-add\" type=\"button\" data-xgo=\""+esc(s.id)+"\">"
+          + (s.classi ? "modifica" : "+ classi") + "</button></small></td>"
         + "<td class=\"r num\" data-label=\"Giorni\">"+days(s).toLocaleString("it-IT")+"</td>"
         + "<td data-label=\"Rapporto\">"+badge+"</td>"
         + "</tr>";
@@ -1139,6 +1151,9 @@ function cdcDettaglio(c, g){
     + corpo + "</tbody></table></td></tr>";
 }
 function wireCdcRows(){
+  document.getElementById("p-cdc").querySelectorAll("[data-xgo]").forEach(function(b){
+    b.addEventListener("click", function(ev){ ev.stopPropagation(); vaiAExtra(b.dataset.xgo); });
+  });
   document.getElementById("p-cdc").querySelectorAll(".cdc-row").forEach(function(tr){
     function apriChiudi(){
       var c = tr.dataset.cdc;
@@ -1268,11 +1283,32 @@ function itemHtml(s){
     + "<button class=\"item-btn\" type=\"button\" data-id=\""+esc(s.id)+"\" aria-expanded=\"false\">"
       + "<span class=\"item-cdc\"><span class=\"dot\" style=\"background:"+col(s.cdc)+"\"></span>"+esc(s.cdc)+"</span>"
       + "<span class=\"item-school\">"+esc(sc.ist)+badges
-        + "<small>"+esc(sc.nome)+" · "+esc(sc.comune)+" · "+esc(k.nome)
-        + (s.classi ? "<span class=\"xclassi extra\"> · classi "+esc(s.classi)+"</span>" : "")+"</small></span>"
+        + "<small>"+esc(sc.nome)+" · "+esc(sc.comune)+" · "+esc(k.nome)+"</small></span>"
       + "<span class=\"item-days\">"+fdateShort(s.dal)+" – "+(s.al?fdateShort(s.al):"oggi")
         + " &nbsp;&middot;&nbsp; "+days(s)+" gg</span>"
-    + "</button><div class=\"detail\" hidden id=\"d-"+esc(s.id)+"\"></div></li>";
+    + "</button>" + xlineHtml(s)
+    + "<div class=\"detail\" hidden id=\"d-"+esc(s.id)+"\"></div></li>";
+}
+/* classi e promemoria: una riga sotto ogni servizio, modificabile sul posto.
+   Tocca solo le annotazioni: date, scuola e classe di concorso restano quelle. */
+function xlineHtml(s){
+  var id = esc(s.id), c = s.classi || "", pm = s.promemoria || "";
+  var riga = (c || pm)
+    ? "<div class=\"xline extra\">" + (c ? "<span class=\"xclassi\">classi " + esc(c) + "</span>" : "")
+        + (pm ? "<span class=\"xpm\">" + esc(pm) + "</span>" : "")
+        + "<button class=\"linkbtn inc-add\" type=\"button\" data-xedit=\"" + id + "\">modifica</button></div>"
+    : "<div class=\"xline extra noprint\"><button class=\"linkbtn inc-add\" type=\"button\" data-xedit=\"" + id + "\">+ classi e promemoria</button></div>";
+  return riga
+    + "<div class=\"xedit extra noprint\" id=\"xe-" + id + "\" hidden>"
+    + "<p class=\"xnote\">Annotazione personale: il servizio (date, scuola, classe di concorso) non cambia.</p>"
+    + "<div class=\"grid\">"
+    + "<div class=\"field\"><label for=\"xc-" + id + "\">Classi</label>"
+    +   "<input type=\"text\" id=\"xc-" + id + "\" value=\"" + esc(c) + "\" placeholder=\"1A, 2C, 3B\"></div>"
+    + "<div class=\"field wide\"><label for=\"xp-" + id + "\">Promemoria</label>"
+    +   "<input type=\"text\" id=\"xp-" + id + "\" value=\"" + esc(pm) + "\" placeholder=\"Orario, colleghi di riferimento, progetti\u2026\"></div>"
+    + "</div><div class=\"form-actions\" style=\"margin-top:10px\">"
+    + "<button class=\"btn\" type=\"button\" data-xsave=\"" + id + "\">Salva</button>"
+    + "<button class=\"btn ghost\" type=\"button\" data-xcancel=\"" + id + "\">Annulla</button></div></div>";
 }
 function detailHtml(s){
   var sc = scuola(s.scuola), k = cdcOf(s.cdc);
@@ -1292,15 +1328,6 @@ function detailHtml(s){
     return "<dt>"+esc(r[0])+"</dt><dd>"+r[1]+"</dd>"; }).join("") + "</dl>";
   if(s.note) h += "<p class=\"note"+(s.daVerificare?" verify":"")+"\">"+esc(s.note)+"</p>";
   var id = esc(s.id);
-  h += "<div class=\"xbox extra\"><div class=\"inc-head\"><span>Annotazioni personali</span><span class=\"xtag\">extra</span></div>"
-    + "<div class=\"grid\">"
-    + "<div class=\"field\"><label for=\"xc-"+id+"\">Classi</label>"
-    +   "<input type=\"text\" id=\"xc-"+id+"\" value=\""+esc(s.classi||"")+"\" placeholder=\"1A, 2C, 3B\"></div>"
-    + "<div class=\"field wide\"><label for=\"xp-"+id+"\">Promemoria</label>"
-    +   "<input type=\"text\" id=\"xp-"+id+"\" value=\""+esc(s.promemoria||"")+"\" placeholder=\"Orario, colleghi di riferimento, progetti\u2026\"></div>"
-    + "</div><div class=\"form-actions\" style=\"margin-top:10px\">"
-    + "<button class=\"btn ghost\" type=\"button\" data-xsave=\""+id+"\">Salva le annotazioni</button>"
-    + "<span class=\"status\" role=\"status\"></span></div></div>";
   if(VISTA.servizi[s.id])
     h += "<div class=\"row-actions\"><button class=\"linkbtn\" data-mod=\""+id+"\" type=\"button\">Modifica questo servizio</button>"
       + "<button class=\"linkbtn\" data-del=\""+id+"\" type=\"button\">Elimina questo servizio</button></div>";
@@ -1316,10 +1343,6 @@ function wireItems(){
       if(!s){ return; }
       b.setAttribute("aria-expanded", "true");
       d.innerHTML = detailHtml(s); d.hidden = false;
-      d.querySelectorAll("input").forEach(function(inp){
-        if(bozze[inp.id] != null) inp.value = bozze[inp.id];
-        inp.addEventListener("input", function(){ bozze[inp.id] = inp.value; });
-      });
       var del = d.querySelector("[data-del]");
       if(del) del.addEventListener("click", function(){
         var id = del.dataset.del;
@@ -1328,16 +1351,6 @@ function wireItems(){
       });
       var mod = d.querySelector("[data-mod]");
       if(mod) mod.addEventListener("click", function(){ apriServizio(mod.dataset.mod); });
-      var xs = d.querySelector("[data-xsave]");
-      if(xs) xs.addEventListener("click", function(){
-        var id = xs.dataset.xsave;
-        var c = document.getElementById("xc-" + id).value.trim();
-        var pm = document.getElementById("xp-" + id).value.trim();
-        aperti[id] = true;
-        delete bozze["xc-" + id]; delete bozze["xp-" + id];
-        cambia({k:"patch", id:id, v:{classi:c, promemoria:pm}});
-        avvisa("Annotazioni salvate.");
-      });
     }
     b.addEventListener("click", function(){
       var open = b.getAttribute("aria-expanded") === "true";
@@ -1350,6 +1363,55 @@ function wireItems(){
     });
     if(aperti[b.dataset.id]) mostra();
   });
+  wireExtra(document.getElementById("p-crono"));
+}
+var apertiX = {};
+function apriExtra(id, fuoco){
+  var box = document.getElementById("xe-" + id); if(!box) return;
+  apertiX[id] = true; box.hidden = false;
+  if(fuoco){
+    box.scrollIntoView({behavior:"smooth", block:"center"});
+    setTimeout(function(){ document.getElementById("xc-" + id).focus({preventScroll:true}); }, 300);
+  }
+}
+function chiudiExtra(id){
+  delete apertiX[id]; delete bozze["xc-" + id]; delete bozze["xp-" + id];
+  var box = document.getElementById("xe-" + id); if(box) box.hidden = true;
+}
+function wireExtra(root){
+  root.querySelectorAll(".xedit").forEach(function(box){
+    var id = box.id.slice(3);
+    box.querySelectorAll("input").forEach(function(inp){
+      if(bozze[inp.id] != null) inp.value = bozze[inp.id];
+      inp.addEventListener("input", function(){ bozze[inp.id] = inp.value; });
+      inp.addEventListener("keydown", function(ev){
+        if(ev.key === "Enter"){ ev.preventDefault(); box.querySelector("[data-xsave]").click(); }
+        if(ev.key === "Escape") chiudiExtra(id);
+      });
+    });
+    if(apertiX[id]) box.hidden = false;
+  });
+  root.querySelectorAll("[data-xedit]").forEach(function(b){
+    b.addEventListener("click", function(){ apriExtra(b.dataset.xedit, true); });
+  });
+  root.querySelectorAll("[data-xcancel]").forEach(function(b){
+    b.addEventListener("click", function(){ chiudiExtra(b.dataset.xcancel); });
+  });
+  root.querySelectorAll("[data-xsave]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = b.dataset.xsave;
+      var c = document.getElementById("xc-" + id).value.trim();
+      var pm = document.getElementById("xp-" + id).value.trim();
+      chiudiExtra(id);
+      cambia({k:"patch", id:id, v:{classi:c, promemoria:pm}});
+      avvisa(c || pm ? "Salvato." : "Annotazioni tolte.");
+    });
+  });
+}
+/* dal riepilogo per classe di concorso: porta alla cronologia con l'editor aperto */
+function vaiAExtra(id){
+  document.getElementById("tab-crono").click();
+  apriExtra(id, true);
 }
 function blank(id){
   document.getElementById(id).innerHTML =
