@@ -8,8 +8,11 @@
 
 !.gitignore
 
-# l'app cifrata, l'unico file che contiene i dati
+# l'app cifrata, con i dati certificati
 !index.html
+
+# aggiunte, extra e incarichi scritti dall'app, cifrati: li scrive l'app da sola
+!modifiche.enc.json
 
 # il dominio personalizzato: senza questo file GitHub Pages
 # torna a servire il sito su arstantra.github.io
